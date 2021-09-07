@@ -25,7 +25,7 @@ void FileProcessor::ProcessQCFile(std::string fileName, float scaleMult)
         while (getline(fsMainStream, buffer)) 
         {
             //Lets iterate through our parameters, shall we?
-            //Comments are supported except $hbox and $attachment
+            //Comments are kinda supported
             if (buffer.find("$hbox") != string::npos)
             {
                 float maxesAndMins[6];          //Maximum and Mininmum XYZ values
@@ -92,6 +92,69 @@ void FileProcessor::ProcessQCFile(std::string fileName, float scaleMult)
                     //Ignore the parameters and add other words 
                     //if there are any (comments etc.)
                     if (iter > quoteIndices[1] + 6)
+                        finalString += " " + word;
+                    iter++;
+                }
+
+                fsWriteStream << finalString << endl;
+            }
+            else if (buffer.find("$attachment") != string::npos)
+            {
+                float maxesAndMins[3];          //XYZ values
+                int attIndex = 0;               //Attachment index.
+                string attName;                 //Attachment bone name.
+                int quoteIndices[2] = { 0, 0 };   //Which words include a double quotation mark?
+
+                string finalString = "$attachment ";  //"Initialize" with parameter
+
+                vector<string> words = split(buffer, ' '); //Split by space
+
+                //Search for double quotes
+                for (size_t i = 0; i < words.size(); i++)
+                {
+                    if (words[i].find("\"") != string::npos && quoteIndices[0] == 0)
+                    {
+                        quoteIndices[0] = (int)i;
+                    }
+                    else if (words[i].find("\"") != string::npos)
+                    {
+                        quoteIndices[1] = (int)i;
+                    }
+                }
+
+                for (size_t i = quoteIndices[0]; i < quoteIndices[1] + 1; i++)
+                {
+                    attName += words[i];
+                    if (i < quoteIndices[1])
+                        attName += " ";
+                }
+
+                //Set Hbox Type
+                attIndex = stoi(words[1]);
+
+                //Put Maxes and Mins to their individual places into the array
+                maxesAndMins[0] = stof(words[quoteIndices[1] + 1]) * scaleMult;
+                maxesAndMins[1] = stof(words[quoteIndices[1] + 2]) * scaleMult;
+                maxesAndMins[2] = stof(words[quoteIndices[1] + 3]) * scaleMult;
+
+                //Make string structure.
+                finalString +=
+                    to_string(attIndex)
+                    + " "
+                    + attName
+                    + " "
+                    + to_string(maxesAndMins[0])
+                    + " "
+                    + to_string(maxesAndMins[1])
+                    + " "
+                    + to_string(maxesAndMins[2]);
+
+                int iter = 0;
+                for (string word : words)
+                {
+                    //Ignore the parameters and add other words 
+                    //if there are any (comments etc.)
+                    if (iter > quoteIndices[1] + 3)
                         finalString += " " + word;
                     iter++;
                 }
