@@ -14,12 +14,6 @@ FileProcessor fProcessor;
 
 int main(int argc, char* argv[])
 {
-    while (1)
-    {
-        FileProcessor* f2Processor = new FileProcessor;
-        delete f2Processor;
-    }
-
     //First argument is filename
     for (int i = 1; i < argc; i++)
     {
